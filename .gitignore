@@ -1,0 +1,16 @@
+# Node
+node_modules
+dist
+
+# Build artifacts
+*.tsbuildinfo
+
+# AWS CDK context
+cdk.out
+cdk.context.json
+
+# Logs
+*.log
+
+# Environment
+.env.local

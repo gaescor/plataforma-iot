@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["tenantId", "deviceId", "ts", "metrics"],
+  "properties": {
+    "tenantId": { "type": "string" },
+    "deviceId": { "type": "string" },
+    "ts": { "type": "integer" },
+    "metrics": { "type": "object" }
+  }
+}

@@ -1,0 +1,9 @@
+
+Outputs:
+PlatformStack.ApiKey = ons9h61pph
+PlatformStack.IngestUrl = https://odb7yanaph.execute-api.us-east-1.amazonaws.com/prod/ingest
+PlatformStack.IngestionApiEndpoint3342EB9B = https://odb7yanaph.execute-api.us-east-1.amazonaws.com/prod/
+PlatformStack.UserPoolClientId = 1cte4l703e0o2a2hh80ib32goo
+PlatformStack.UserPoolId = us-east-1_eSYGNEidz
+Stack ARN:
+arn:aws:cloudformation:us-east-1:471112652112:stack/PlatformStack/14dbe820-878d-11f0-9635-0affe60dddb7
