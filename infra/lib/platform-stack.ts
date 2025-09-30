@@ -1,5 +1,162 @@
+import * as cdk from "aws-cdk-lib";
+import { Construct } from "constructs";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as iam from "aws-cdk-lib/aws-iam";
+
+export class PlatformStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    // 📦 DynamoDB Table
+    const telemetryTable = new dynamodb.Table(this, "TelemetryTable", {
+      partitionKey: { name: "deviceId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "timestamp", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // ⚠️ destruir en teardown
+    });
+
+    // 🌐 API Gateway con CORS habilitado
+    const api = new apigateway.RestApi(this, "PlatformApi", {
+      restApiName: "Platform Service",
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+      },
+    });
+
+    // Lambda para /telemetry (opcional para lógica más avanzada)
+    const telemetryLambda = new lambda.Function(this, "TelemetryLambda", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: "telemetry.handler",
+      code: lambda.Code.fromAsset("lambda"), // carpeta donde está telemetry.ts compilado
+    });
+
+    // 📡 Recurso /telemetry
+    const telemetryResource = api.root.addResource("telemetry");
+
+    // ✅ Role para que API Gateway acceda a DynamoDB
+    const apiDynamoRole = new iam.Role(this, "ApiDynamoRole", {
+      assumedBy: new iam.ServicePrincipal("apigateway.amazonaws.com"),
+    });
+
+    // ✅ Dar permisos explícitos
+apiDynamoRole.addToPolicy(new iam.PolicyStatement({
+  effect: iam.Effect.ALLOW,
+  actions: ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:Scan"],
+  resources: [telemetryTable.tableArn],
+}));
+
+    telemetryTable.grantReadData(telemetryLambda); // 👈 permisos de lectura   apiDynamoRole
+
+    // GET /telemetry → DynamoDB
+    telemetryResource.addMethod(
+      "GET",
+      new apigateway.AwsIntegration({
+        service: "dynamodb",
+        action: "Query",
+        options: {
+          credentialsRole: apiDynamoRole, // 👈 ahora sí lo usamos
+          integrationResponses: [
+            {
+              statusCode: "200",
+              responseParameters: {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+            },
+          ],
+          requestTemplates: {
+            "application/json": JSON.stringify({
+              TableName: telemetryTable.tableName,
+              KeyConditionExpression: "deviceId = :deviceId",
+              ExpressionAttributeValues: {
+                ":deviceId": { S: "$input.params('deviceId')" },
+              },
+            }),
+          },
+        },
+      }),
+      {
+        methodResponses: [
+          {
+            statusCode: "200",
+            responseParameters: {
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+          },
+        ],
+      }
+    );
+
+    // 👉 Output para usar en el frontend
+    new cdk.CfnOutput(this, "ApiUrl", {
+      value: api.url,
+    });
+  }
+}
+
+
+
+
+
+
+
+
+/*import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+
+// ... cuando creas el API
+const api = new apigateway.RestApi(this, 'TelemetryApi', {
+  restApiName: 'Telemetry Service',
+  description: 'API para consultar telemetría',
+  defaultCorsPreflightOptions: {
+    allowOrigins: apigateway.Cors.ALL_ORIGINS,
+    allowMethods: apigateway.Cors.ALL_METHODS,
+    allowHeaders: ['*'],
+  },
+});
+
+// recurso /telemetry
+const telemetryResource = api.root.addResource('telemetry');
+
+telemetryResource.addMethod(
+  'GET',
+  new apigateway.LambdaIntegration(queryFn),
+  {
+    authorizationType: apigateway.AuthorizationType.NONE,
+    apiKeyRequired: true,
+    methodResponses: [
+      {
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Origin': true,
+          'method.response.header.Access-Control-Allow-Headers': true,
+        },
+      },
+    ],
+  }
+);
+
+// respuestas por defecto con CORS
+api.addGatewayResponse('Default4xx', {
+  type: apigateway.ResponseType.DEFAULT_4XX,
+  responseHeaders: {
+    'Access-Control-Allow-Origin': "'*'",
+    'Access-Control-Allow-Headers': "'*'",
+  },
+});
+api.addGatewayResponse('Default5xx', {
+  type: apigateway.ResponseType.DEFAULT_5XX,
+  responseHeaders: {
+    'Access-Control-Allow-Origin': "'*'",
+    'Access-Control-Allow-Headers': "'*'",
+  },
+});*/
+
+
+
 // import * as timestream from 'aws-cdk-lib/aws-timestream'; // ❌ desactivado por ahora
-import * as cdk from 'aws-cdk-lib';
+/*import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -122,3 +279,4 @@ export class PlatformStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ApiKey', { value: apiKey.keyId });
   }
 }
+*/

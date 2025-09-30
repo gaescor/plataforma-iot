@@ -9,13 +9,16 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.633.0",
-    "@aws-sdk/lib-dynamodb": "^3.633.0"
+    "@aws-sdk/lib-dynamodb": "^3.633.0",
+    "aws-cdk-lib": "^2.36.0",
+    "constructs": "^10.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.4.0",
+    "@types/aws-lambda": "^8.10.152",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.11.30",
+    "esbuild": "^0.25.10",
     "ts-node": "^10.9.2",
-    "@types/node": "^20.11.30"
+    "typescript": "^5.4.0"
   }
 }
-
-

@@ -14,18 +14,20 @@ export default function DashboardPage() {
 
   async function load() {
     try {
-      setLoading(true);
-      setError(null);
+      setLoading(true); setError(null);
       const from = dayjs().subtract(3, 'day').toISOString();
       const to = dayjs().toISOString();
       const data = await fetchTelemetry({ deviceId, from, to });
+
+      console.log("API URL desde env:", process.env.NEXT_PUBLIC_API_BASE);
+      // 👇 Aquí revisamos qué devuelve la API
       console.log("Telemetry data from API:", data);
+
+
       setItems(data);
     } catch (e: any) {
       setError(e.message || 'Error al consultar');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   useEffect(() => { load(); }, []);
@@ -35,17 +37,8 @@ export default function DashboardPage() {
       <header className="flex gap-2 items-center">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <div className="ml-auto flex gap-2">
-          <input
-            value={deviceId}
-            onChange={e => setDeviceId(e.target.value)}
-            className="border rounded px-2 py-1"
-          />
-          <button
-            onClick={load}
-            className="bg-blue-600 text-white px-3 py-1 rounded"
-          >
-            {loading ? 'Cargando...' : 'Consultar'}
-          </button>
+          <input value={deviceId} onChange={e=>setDeviceId(e.target.value)} className="border rounded px-2 py-1" />
+          <button onClick={load} className="bg-blue-600 text-white px-3 py-1 rounded">{loading ? 'Cargando...' : 'Consultar'}</button>
         </div>
       </header>
 
@@ -53,7 +46,9 @@ export default function DashboardPage() {
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <TelemetryChart items={items} />
-        <TelemetryTable items={items} />
+        <div>
+          <TelemetryTable items={items} />
+        </div>
       </section>
 
       <MapPlaceholder items={items} />
